@@ -1,0 +1,321 @@
+openapi: 3.0.3
+info:
+  title: Rozetka Mobile API
+  description: REST API для мобільного застосунку Rozetka Mobile
+  version: 2.1.0
+  contact:
+    name: Rozetka Mobile Team
+
+servers:
+  - url: https://api.rozetka.com.ua
+    description: Production
+  - url: https://api-staging.rozetka.com.ua
+    description: Staging
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/v2/catalog/search:
+    get:
+      summary: Пошук товарів
+      tags: [Search]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Пошуковий запит
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Список товарів
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+        '400':
+          description: Некоректний запит
+
+  /api/v2/products/{id}:
+    get:
+      summary: Картка товару
+      tags: [Catalog]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Деталі товару
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Товар не знайдено
+
+  /api/v2/cart:
+    get:
+      summary: Отримати кошик
+      tags: [Cart]
+      responses:
+        '200':
+          description: Вміст кошика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    post:
+      summary: Додати товар до кошика
+      tags: [Cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItem'
+      responses:
+        '200':
+          description: Кошик оновлено
+        '400':
+          description: Некоректні дані
+
+  /api/v2/orders:
+    post:
+      summary: Створити замовлення
+      tags: [Checkout]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Замовлення створено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Некоректні дані замовлення
+        '402':
+          description: Помилка оплати
+
+  /api/v2/orders/{id}:
+    get:
+      summary: Статус замовлення
+      tags: [Orders]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Деталі замовлення
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Замовлення не знайдено
+
+  /api/v2/auth/login:
+    post:
+      summary: Логін користувача
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успішна авторизація
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Невірні дані
+
+  /api/v2/auth/refresh:
+    post:
+      summary: Оновлення access token
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Новий access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Refresh token недійсний
+
+  /api/v2/wishlist:
+    get:
+      summary: Список бажань
+      tags: [Wishlist]
+      responses:
+        '200':
+          description: Товари у wishlist
+    post:
+      summary: Додати товар до wishlist
+      tags: [Wishlist]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: string
+      responses:
+        '201':
+          description: Додано до wishlist
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+          example: UAH
+        images:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+        in_stock:
+          type: boolean
+
+    ProductList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer
+        page:
+          type: integer
+
+    CartItem:
+      type: object
+      properties:
+        product_id:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        total_price:
+          type: number
+
+    OrderRequest:
+      type: object
+      required: [delivery, payment]
+      properties:
+        delivery:
+          type: object
+          properties:
+            method:
+              type: string
+              enum: [nova_poshta, ukrposhta, courier]
+            address:
+              type: string
+        payment:
+          type: object
+          properties:
+            method:
+              type: string
+              enum: [card, apple_pay, google_pay, liqpay]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, delivered, cancelled]
+        ttn:
+          type: string
+          description: Номер ТТН
+        created_at:
+          type: string
+          format: date-time
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthTokens:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+          description: Секунди до закінчення дії access token

@@ -1,0 +1,42 @@
+site_name: Rozetka Mobile Documentation
+site_url: https://SaichukAndri.github.io/rozetka-mobile-docs/
+site_description: Документація мобільного застосунку Rozetka
+
+theme:
+  name: material
+  language: uk
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: orange
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - content.code.copy
+
+nav:
+  - Головна: README.md
+  - Архітектура:
+    - 'Вимоги (SSD)': docs/architecture/SSD.md
+    - 'Дизайн (SDD)': docs/architecture/SDD.md
+    - 'Інфраструктура (ISD)': docs/architecture/ISD.md
+  - API:
+    - 'OpenAPI Специфікація': docs/api/openapi.yaml
+  - Якість:
+    - 'Test Strategy': docs/quality/test-strategy.md
+    - 'Traceability Matrix': docs/quality/traceability-matrix.md
+  - Розробникам:
+    - 'Onboarding': docs/developer/onboarding.md
+    - 'Contribution Guide': docs/developer/contribution-guide.md
+
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
