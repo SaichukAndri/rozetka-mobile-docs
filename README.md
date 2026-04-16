@@ -11,6 +11,7 @@
 
 ### API
 - [OpenAPI Специфікація](docs/api/openapi.yaml) — контракт REST API
+- [Swagger UI](https://saichukandri.github.io/rozetka-mobile-docs/swagger-ui.html) — інтерактивна документація API
 
 ### Якість
 - [Test Strategy](docs/quality/test-strategy.md) — стратегія тестування
